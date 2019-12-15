@@ -2,6 +2,13 @@ const express = require('express');
 const apiRouter = express.Router();
 const dbMethods = require('./db.js')
 
+
+const fields = {
+  'minions': ['name', 'title', 'weakness', 'salary'],
+  'ideas': ['name', 'description', 'weeklyRevenue', 'numWeeks'],
+};
+
+
 apiRouter.get('/', (req, res, next) => {
   res.send('Welcome to the API buddy bucko!');
 });
@@ -53,40 +60,32 @@ const putToDb = (req, res, next) => {
   next();
 };
 
+
+const postToDb = (req, res, next) => {
+  const type = pathAsArray(req.url)[0];
+
+  const result = dbMethods.addToDatabase(type, req.body);
+  if (result !== null) res.status(201).send(result);
+  else res.status(400).send();
+};
+
+const deleteItemFromDb = (req, res, next) => {
+  const path = pathAsArray(req.url);
+
+  const type = path[0];
+  const id = req.id;
+
+  const found = dbMethods.deleteFromDatabasebyId(type, id);
+  const status = found ? 204 : 404;
+  res.status(status).send();
+}
+
 ['minions', 'ideas'].forEach(category => {
   apiRouter.get(`/${category}`, getFromDb);
   apiRouter.get(`/${category}/:id`, getFromDb);
-  apiRouter.put(`/${category}/:id`, putToDb)
+  apiRouter.put(`/${category}/:id`, putToDb);
+  apiRouter.post(`/${category}`, postToDb);
+  apiRouter.delete(`/${category}/:id`, deleteItemFromDb);
 });
-
-
-
-const fields = {
-  'minions': ['name', 'title', 'weakness', 'salary'],
-  'ideas': ['name', 'description', 'weeklyRevenue', 'numWeeks'],
-};
-
-
-
-/*
-
-apiRouter.put('/minions/:id', (req, res, next) => {
- const object = req.item;
-
- for (let item of ["name", "title", "weakness", "salary"]){
-   let value = req.body[item];
-
-   if (value){
-     if (item === "salary") value = parseInt(value);
-     object[item] = value;
-   }
- }
- dbMethods.updateInstanceInDatabase('minions', object);
- res.send(object);
-});
-*/
-
-//apiRouter.get('/minions/:id', getFromDb);
-//apiRouter.get('/ideas/:id', getFromDb);
 
 module.exports = apiRouter;
