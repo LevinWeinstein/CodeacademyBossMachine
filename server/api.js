@@ -1,7 +1,7 @@
 const express = require('express');
 const apiRouter = express.Router();
 const dbMethods = require('./db.js')
-
+const checkMillionDollarIdea = require('./checkMillionDollarIdea');
 
 const fields = {
   'minions': ['name', 'title', 'weakness', 'salary'],
@@ -84,8 +84,25 @@ const deleteItemFromDb = (req, res, next) => {
   apiRouter.get(`/${category}`, getFromDb);
   apiRouter.get(`/${category}/:id`, getFromDb);
   apiRouter.put(`/${category}/:id`, putToDb);
-  apiRouter.post(`/${category}`, postToDb);
   apiRouter.delete(`/${category}/:id`, deleteItemFromDb);
 });
+
+apiRouter.post(`/minions`, postToDb);
+apiRouter.post(`/ideas`, checkMillionDollarIdea, postToDb);
+
+
+apiRouter.get('/meetings', (req, res, next) => {
+  res.send(dbMethods.deleteAllFromDatabase('meetings'));
+});
+
+apiRouter.post('/meetings', (req, res, next) => {
+  const result = dbMethods.addToDatabase('meetings', dbMethods.createMeeting());
+  res.status(201).send(result);
+});
+
+apiRouter.delete('/meetings', (req, res, next) => {
+  dbMethods.deleteAllFromDatabase('meetings');
+  res.status(204).send();
+})
 
 module.exports = apiRouter;
